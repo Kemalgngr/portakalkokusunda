@@ -8,11 +8,12 @@ const root=path.resolve(__dirname,'../public');
  try{
  const page=await browser.newPage({viewport:{width:390,height:844}});
  const categories=['Kahvaltı','Sıkma & Börek','Yemekler','Tatlılar','İçecekler','Yöresel ve Doğal Ürünler'];
- const products=[{id:90,name:'Köy Yumurtası (30 adet)',price:250,description:'30 adetlik koli.',category:'Yöresel ve Doğal Ürünler',badge:'',available:true},{id:1,name:'Serpme Kahvaltı',price:250,description:'Yöresel peynirler, zeytin, ev reçelleri, bal, tereyağı ve yumurta. 1 adet çay ikramımızdır.',category:'Kahvaltı',badge:'',available:true}];
+ const products=[{id:2,name:'Menemen',price:180,description:'Tavada.',category:'Kahvaltı',badge:'',available:true,sort_order:2},{id:90,name:'Köy Yumurtası (30 adet)',price:250,description:'30 adetlik koli.',category:'Yöresel ve Doğal Ürünler',badge:'',available:true},{id:1,name:'Serpme Kahvaltı',price:250,description:'Yöresel peynirler, zeytin, ev reçelleri, bal, tereyağı ve yumurta. 1 adet çay ikramımızdır.',category:'Kahvaltı',badge:'',available:true}];
  await page.route('https://qbwgpqkuqnmhsnepblmx.supabase.co/**',async route=>{
   const r=route.request(),url=new URL(r.url());let result=null;
   if(url.pathname.endsWith('/token'))result={access_token:'test',refresh_token:'test',expires_at:Date.now()/1000+3600};
   else if(url.pathname.endsWith('/is_menu_admin'))result=true;
+  else if(url.pathname.endsWith('/reorder_products'))r.postDataJSON().product_ids.forEach((id,i)=>{products.find(p=>p.id===id).sort_order=i+1;});
   else if(url.pathname.endsWith('/categories')){
    if(r.method()==='POST')categories.push(r.postDataJSON().name);
    else if(r.method()==='PATCH'){
@@ -84,9 +85,24 @@ const root=path.resolve(__dirname,'../public');
  await page.locator('.menu-edit-row').filter({has:page.getByRole('textbox',{name:'Tatlılar menü adı',exact:true})}).getByRole('button',{name:'Menüyü sil'}).click();
  await page.locator('#menus-status').filter({hasText:'Menü silindi.'}).waitFor();
  assert(!categories.includes('Tatlılar'));
+ await page.getByLabel('Sıralanacak menü').selectOption('Köy Kahvaltısı');
+ await page.getByRole('spinbutton',{name:'Serpme Kahvaltı sıra numarası',exact:true}).fill('1');
+ await page.getByRole('spinbutton',{name:'Serpme Kahvaltı sıra numarası',exact:true}).press('Tab');
+ await page.getByRole('button',{name:'Sıralamayı kaydet',exact:true}).click();
+ await page.locator('#order-status').filter({hasText:'Sıralama kaydedildi.'}).waitFor();
+ assert.equal(products.find(p=>p.id===1).sort_order,1);
+ await page.reload();
+ await page.getByLabel('Sıralanacak menü').selectOption('Köy Kahvaltısı');
+ assert.equal(await page.locator('.order-row').first().locator('span').textContent(),'Serpme Kahvaltı');
+ await page.getByRole('button',{name:'Menemen yukarı taşı',exact:true}).click();
+ await page.getByRole('button',{name:'Sıralamayı kaydet',exact:true}).click();
+ await page.locator('#order-status').filter({hasText:'Sıralama kaydedildi.'}).waitFor();
  await page.goto('http://menu.test/');
  await page.getByRole('button',{name:'Köy Kahvaltısı',exact:true}).waitFor();
  assert.equal(await page.getByRole('button',{name:'Tatlılar',exact:true}).count(),0);
+ await page.getByRole('button',{name:'Köy Kahvaltısı',exact:true}).click();
+ assert.equal(await page.locator('.product h3').first().textContent(),'Menemen');
+ console.log('PASS: sıra numarası, yukarı taşıma, kaydetme, yenileme sonrası kalıcılık ve müşteri sırası (Supabase taklidi).');
  console.log('PASS: menü yeniden adlandırma ve ürünlerin taşınması; dolu menü silme koruması; boş menü silme ve müşteri görünümü.');
  console.log('PASS: yönetici kategori ekleme, yeni kategoriye ürün kaydetme, yenileme sonrası görünürlük, müşteri sekmeleri, boş Tatlılar, mobil taşma kontrolü (Supabase taklidi).');
  }finally{await browser.close();}

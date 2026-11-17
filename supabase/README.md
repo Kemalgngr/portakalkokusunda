@@ -36,3 +36,7 @@ Kategori güncellemesi daha önce uygulandıysa yalnızca `natural-products.sql`
 ## Menü adını düzenleme ve silme
 
 Kategori kurulumu sonrasında `category-management.sql` dosyasını bir kez SQL Editor'da çalıştırın. UPDATE ve DELETE izinleri RLS ile yalnızca menü yöneticilerine verilir. Yönetici ekranında ürün listesinin altında Menüler bölümü bulunur. İsim değişiklikleri `products_category_fkey` üzerindeki `ON UPDATE CASCADE` ile ürünlere yansır. Ürün içeren menüler (gizli ürünler dahil) arayüz ve veritabanının `ON DELETE RESTRICT` kuralıyla silinemez. Önce ürünleri başka menüye taşıyın veya silin. Boş menü silindikten sonra müşteri menüsünden kaldırılır. Bu SQL yeni kategori eklemez veya Tatlılar'a ürün eklemez.
+
+## Ürün sıralaması
+
+`product-order.sql` dosyasını SQL Editor'da bir kez çalıştırın. Mevcut ürün sırası korunarak `sort_order` alanı eklenir. Yeni ürünler varsayılan olarak sona gelir; eşit numaralarda id belirleyicidir. Yönetici ekranında Ürün sıralaması bölümünden menü seçip numara veya yukarı/aşağı düğmeleriyle taslak sırayı değiştirin, Sıralamayı kaydet'e basın. Menü değiştirmek veya sayfayı yenilemek kaydedilmemiş sırayı sıfırlar. Gizli ürünler de sıralamaya dahildir. `reorder_products` fonksiyonu yönetici yetkisini ve kategoriye ait tam/tekrarsız ürün listesini doğrular, tüm sıralamayı tek transaction içinde uygular; yetkisiz hesaplar RLS ile engellenir. Liste eşzamanlı değişmişse yenileme istenir. Canlı Supabase testi ayrıca gereklidir.

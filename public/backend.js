@@ -24,6 +24,7 @@ window.MenuBackend = (() => {
   if(path==='menu'){
    const t=await token();
    const products=await request('/rest/v1/products?select=*&order=id.asc',{token:t});
+   products.sort((a,b)=>(a.sort_order??2147483647)-(b.sort_order??2147483647)||Number(a.id)-Number(b.id));
    let categories;
    try{categories=(await request('/rest/v1/categories?select=name&order=sort_order.asc,name.asc',{token:t})).map(c=>c.name);}
    catch{categories=[...new Set(products.map(p=>p.category))];}
@@ -37,6 +38,10 @@ window.MenuBackend = (() => {
   }
   if(path==='logout'){try{const t=await token();if(t)await request('/auth/v1/logout',{method:'POST',body:{},token:t});}finally{save(null);}return {ok:true};}
   const t=await token();if(!t)throw Error('Yönetici girişi gerekli.');
+  if(path==='products/reorder'){
+   await request('/rest/v1/rpc/reorder_products',{method:'POST',body:{menu_name:body.category,product_ids:body.ids},token:t});
+   return {ok:true};
+  }
   if(path==='categories/update'||path==='categories/delete'){
    const name=String(body.name||'').trim();
    if(!name||name.length>60)throw Error('Menü adı 1–60 karakter olmalı.');
