@@ -1,7 +1,6 @@
 // Public configuration contains no privileged key. Database RLS enforces access.
 window.MenuBackend = (() => {
  const config=window.MENU_CONFIG;
- const categories=['Kahvaltı','Sıkma & Gözleme','Günün Menüsü','İçecekler'];
  let session=null;
  try{session=JSON.parse(sessionStorage.getItem('menu-session')||'null');}catch{}
  function save(value){session=value;if(value)sessionStorage.setItem('menu-session',JSON.stringify(value));else sessionStorage.removeItem('menu-session');}
@@ -22,7 +21,14 @@ window.MenuBackend = (() => {
  }
  async function isAdmin(){const t=await token();if(!t)return false;return await request('/rest/v1/rpc/is_menu_admin',{method:'POST',body:{},token:t})===true;}
  async function api(path,body){
-  if(path==='menu')return {categories,products:await request('/rest/v1/products?select=*&order=id.asc',{token:await token()})};
+  if(path==='menu'){
+   const t=await token();
+   const products=await request('/rest/v1/products?select=*&order=id.asc',{token:t});
+   let categories;
+   try{categories=(await request('/rest/v1/categories?select=name&order=sort_order.asc,name.asc',{token:t})).map(c=>c.name);}
+   catch{categories=[...new Set(products.map(p=>p.category))];}
+   return {categories,products};
+  }
   if(path==='session')return {authenticated:await isAdmin()};
   if(path==='login'){
    const s=await request('/auth/v1/token?grant_type=password',{method:'POST',body:{email:body.email,password:body.password}});save(s);
@@ -31,6 +37,11 @@ window.MenuBackend = (() => {
   }
   if(path==='logout'){try{const t=await token();if(t)await request('/auth/v1/logout',{method:'POST',body:{},token:t});}finally{save(null);}return {ok:true};}
   const t=await token();if(!t)throw Error('Yönetici girişi gerekli.');
+  if(path==='categories'){
+   const name=String(body.name||'').trim();
+   if(!name||name.length>60)throw Error('Kategori adı 1–60 karakter olmalı.');
+   await request('/rest/v1/categories',{method:'POST',body:{name},token:t});return {ok:true};
+  }
   if(path==='products/delete'){await request('/rest/v1/products?id=eq.'+encodeURIComponent(body.id),{method:'DELETE',token:t});return {ok:true};}
   if(path==='products'){
    const row={name:body.name,description:body.description,price:Number(body.price),category:body.category,badge:body.badge,available:body.available};

@@ -20,3 +20,11 @@ Sonuçta bir satır dönmeli. Satır dönmediyse e-postayı ve kullanıcının o
 6. Pages adresinde müşteri menüsünü ve `/admin` girişini kontrol edin. Yönetici hesabıyla fiyat değiştirin; gizli tarayıcı penceresinde güncellemeyi görün. Gizlenen ürünlerin müşteriye dönmediğini ve yöneticisiz yazma isteklerinin engellendiğini canlıda doğrulayın.
 
 `config.js` yalnızca herkese açık proje adresi ve publishable anahtar içerir. Secret/service_role anahtarını asla eklemeyin. Oturum yalnızca ilgili sekmenin sessionStorage alanında tutulur. Veriler Supabase'de saklanır; ücretsiz planın güncel kotaları, duraklatma ve yedekleme koşulları sağlayıcı panelinden kontrol edilmelidir. Bu makineden Supabase'e istek proxy 403 hatasıyla engellendi; canlı SQL/RLS kuralları ve gerçek giriş henüz doğrulanmadı. SQL dosyası panelde çalıştırılmadan menü veritabanı kurulmuş olmaz.
+
+## Yeni kategori yönetimi ve menü güncellemesi
+
+`setup.sql` sonrasında SQL Editor'da `menu-update.sql` dosyasının tamamını çalıştırın (mevcut kurulumlarda yalnızca `menu-update.sql` yeterlidir). Bu işlem ürünleri koruyarak `categories` tablosunu ekler, kategori alanını bu tabloya bağlar, eski kategori adlarını değiştirir ve istenen ürün/fiyat güncellemelerini uygular. İşlem tek transaction içinde çalışır; bir hata durumunda tamamı geri alınır. Yeni ürünler aynı isimde ürün yoksa eklenir. Script tekrar çalıştırılırsa serpme kahvaltı ve çay bilgileri tekrar belirtilen değerlere döner; rutin olarak çalıştırmayın.
+
+Yeni kategori yazma yetkisi yalnızca `menu_admins` listesindeki hesaplara aittir. Tüm ziyaretçiler kategori adlarını okuyabilir; gizli ürünleri okuma ve ürün yazma kuralları değişmez. Yönetici ekranındaki “Menü / kategori ekle” formuyla sekme oluşturun, ardından ürün formunda kategoriyi seçip ürünü kaydedin. Kategori oluşturma işlemi ürünlerden bağımsızdır; boş sekmeler de müşteri menüsünde görünür.
+
+Tarayıcı akış testi: `node tests/menu-ui.cjs` (Playwright ve `/usr/bin/chromium` gerekir). Test Supabase yanıtlarını taklit eder; canlı RLS testi değildir. Canlıda SQL uygulandıktan sonra normal yöneticiyle kategori ekleme/ürün ekleme ve gizli pencerede müşteri görünümü doğrulanmalıdır.
