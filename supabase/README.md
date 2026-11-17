@@ -32,3 +32,7 @@ Tarayıcı akış testi: `node tests/menu-ui.cjs` (Playwright ve `/usr/bin/chrom
 ## Yöresel ve doğal ürünler
 
 Kategori güncellemesi daha önce uygulandıysa yalnızca `natural-products.sql` dosyasını SQL Editor'da çalıştırın. Henüz uygulanmadıysa güncel `menu-update.sql` bu eklemeleri de içerir. İki dosya aynı isim ve kategorideki mevcut ürünleri çoğaltmaz; mevcut ürün fiyatlarını değiştirmez. Yeni kategori sırası 60'tır; İçecekler (50) sonrasında ve yöneticinin eklediği varsayılan sıralı kategorilerden (100) önce gelir. Fiyatlar örnektir, yönetici panelinden değiştirilebilir.
+
+## Menü adını düzenleme ve silme
+
+Kategori kurulumu sonrasında `category-management.sql` dosyasını bir kez SQL Editor'da çalıştırın. UPDATE ve DELETE izinleri RLS ile yalnızca menü yöneticilerine verilir. Yönetici ekranında ürün listesinin altında Menüler bölümü bulunur. İsim değişiklikleri `products_category_fkey` üzerindeki `ON UPDATE CASCADE` ile ürünlere yansır. Ürün içeren menüler (gizli ürünler dahil) arayüz ve veritabanının `ON DELETE RESTRICT` kuralıyla silinemez. Önce ürünleri başka menüye taşıyın veya silin. Boş menü silindikten sonra müşteri menüsünden kaldırılır. Bu SQL yeni kategori eklemez veya Tatlılar'a ürün eklemez.

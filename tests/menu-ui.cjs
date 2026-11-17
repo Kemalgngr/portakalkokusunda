@@ -15,6 +15,11 @@ const root=path.resolve(__dirname,'../public');
   else if(url.pathname.endsWith('/is_menu_admin'))result=true;
   else if(url.pathname.endsWith('/categories')){
    if(r.method()==='POST')categories.push(r.postDataJSON().name);
+   else if(r.method()==='PATCH'){
+    const old=url.searchParams.get('name').slice(3),name=r.postDataJSON().name;
+    categories[categories.indexOf(old)]=name;
+    products.filter(p=>p.category===old).forEach(p=>p.category=name);
+   }else if(r.method()==='DELETE')categories.splice(categories.indexOf(url.searchParams.get('name').slice(3)),1);
    else result=categories.map(name=>({name}));
   }else if(url.pathname.endsWith('/products')){
    if(r.method()==='POST')products.push({id:products.length+100,...r.postDataJSON()});
@@ -36,7 +41,7 @@ const root=path.resolve(__dirname,'../public');
  await page.waitForFunction(()=>document.getElementById('category').value==='Salatalar');
  await page.getByLabel('Ürün adı',{exact:true}).fill('Mevsim Salata');
  await page.getByLabel('Fiyat (₺)').fill('90');
- await page.getByRole('button',{name:'Kaydet',exact:true}).click();
+ await page.locator('#product-form').getByRole('button',{name:'Kaydet',exact:true}).click();
  await page.getByText('Salatalar / Mevsim Salata · 90 ₺',{exact:true}).waitFor();
  assert.equal(products.at(-1).category,'Salatalar');
  await page.reload();
@@ -66,6 +71,23 @@ const root=path.resolve(__dirname,'../public');
   console.log(`Mobil ${width}px: kart ${metrics.height}px; tüm kategoriler kaydırmadan erişilebilir.`);
  }
  await page.screenshot({path:'/tmp/portakal-compact-menu.png',fullPage:true});
+ await page.goto('http://menu.test/admin.html');
+ const breakfast=page.locator('.menu-edit-row').filter({has:page.getByRole('textbox',{name:'Kahvaltı menü adı',exact:true})});
+ await breakfast.getByRole('textbox').fill('Köy Kahvaltısı');
+ await breakfast.getByRole('button',{name:'Kaydet',exact:true}).click();
+ await page.getByText('Köy Kahvaltısı / Serpme Kahvaltı · 250 ₺',{exact:true}).waitFor();
+ assert.equal(products.find(p=>p.id===1).category,'Köy Kahvaltısı');
+ await page.locator('.menu-edit-row').filter({has:page.getByRole('textbox',{name:'Köy Kahvaltısı menü adı',exact:true})}).getByRole('button',{name:'Menüyü sil'}).click();
+ await page.locator('#menus-status').filter({hasText:'Önce ürünleri'}).waitFor();
+ assert(categories.includes('Köy Kahvaltısı'));
+ page.once('dialog',dialog=>dialog.accept());
+ await page.locator('.menu-edit-row').filter({has:page.getByRole('textbox',{name:'Tatlılar menü adı',exact:true})}).getByRole('button',{name:'Menüyü sil'}).click();
+ await page.locator('#menus-status').filter({hasText:'Menü silindi.'}).waitFor();
+ assert(!categories.includes('Tatlılar'));
+ await page.goto('http://menu.test/');
+ await page.getByRole('button',{name:'Köy Kahvaltısı',exact:true}).waitFor();
+ assert.equal(await page.getByRole('button',{name:'Tatlılar',exact:true}).count(),0);
+ console.log('PASS: menü yeniden adlandırma ve ürünlerin taşınması; dolu menü silme koruması; boş menü silme ve müşteri görünümü.');
  console.log('PASS: yönetici kategori ekleme, yeni kategoriye ürün kaydetme, yenileme sonrası görünürlük, müşteri sekmeleri, boş Tatlılar, mobil taşma kontrolü (Supabase taklidi).');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exit(1)});

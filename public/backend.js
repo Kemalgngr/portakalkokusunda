@@ -9,7 +9,7 @@ window.MenuBackend = (() => {
   if(token)headers.Authorization='Bearer '+token;
   const r=await fetch(config.url+path,{method,headers,body:body===undefined?undefined:JSON.stringify(body),cache:'no-store'});
   const text=await r.text();let data;try{data=text?JSON.parse(text):null;}catch{data=null;}
-  if(!r.ok){if(r.status===401)throw Error('Oturum geçersiz. Lütfen tekrar giriş yapın.');throw Error(data?.error_description||data?.msg||data?.message||'İşlem tamamlanamadı.');}
+  if(!r.ok){if(data?.code==='23503')throw Error('Bu menüde ürün var. Önce ürünleri başka bir menüye taşıyın veya silin.');if(data?.code==='23505')throw Error('Bu isimde bir menü zaten var. Farklı bir isim seçin.');if(r.status===401)throw Error('Oturum geçersiz. Lütfen tekrar giriş yapın.');throw Error(data?.error_description||data?.msg||data?.message||'İşlem tamamlanamadı.');}
   return data;
  }
  async function token(){
@@ -37,6 +37,15 @@ window.MenuBackend = (() => {
   }
   if(path==='logout'){try{const t=await token();if(t)await request('/auth/v1/logout',{method:'POST',body:{},token:t});}finally{save(null);}return {ok:true};}
   const t=await token();if(!t)throw Error('Yönetici girişi gerekli.');
+  if(path==='categories/update'||path==='categories/delete'){
+   const name=String(body.name||'').trim();
+   if(!name||name.length>60)throw Error('Menü adı 1–60 karakter olmalı.');
+   const oldName=path==='categories/update'?body.oldName:name;
+   await request('/rest/v1/categories?name=eq.'+encodeURIComponent(oldName),{
+    method:path==='categories/update'?'PATCH':'DELETE',
+    body:path==='categories/update'?{name}:undefined,token:t});
+   return {ok:true};
+  }
   if(path==='categories'){
    const name=String(body.name||'').trim();
    if(!name||name.length>60)throw Error('Kategori adı 1–60 karakter olmalı.');
