@@ -54,6 +54,9 @@ window.MenuBackend = (() => {
    if(!rows?.length)throw Error('Adres ayarları bulunamadı veya düzenleme yetkiniz yok.');
    return {ok:true};
   }
+  if(path==='categories/reorder'){
+   await request('/rest/v1/rpc/reorder_categories',{method:'POST',body:{menu_names:body.names},token:t});return {ok:true};
+  }
   if(path==='products/reorder'){
    await request('/rest/v1/rpc/reorder_products',{method:'POST',body:{menu_name:body.category,product_ids:body.ids},token:t});
    return {ok:true};
