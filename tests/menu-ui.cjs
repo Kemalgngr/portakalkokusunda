@@ -7,6 +7,7 @@ const root=path.resolve(__dirname,'../public');
  const browser=await chromium.launch({executablePath:'/usr/bin/chromium',headless:true,args:['--no-sandbox']});
  try{
  const page=await browser.newPage({viewport:{width:390,height:844}});
+ let location={address:'Doruklu Mah, Toroslar Cd. No: 489\n33220 Toroslar / Mersin',map_url:'https://www.google.com/maps/search/?api=1&query=Doruklu'};
  const categories=['Kahvaltı','Sıkma & Börek','Yemekler','Tatlılar','İçecekler','Yöresel ve Doğal Ürünler'];
  const products=[{id:2,name:'Menemen',price:180,description:'Tavada.',category:'Kahvaltı',badge:'',available:true,sort_order:2},{id:90,name:'Köy Yumurtası (30 adet)',price:250,description:'30 adetlik koli.',category:'Yöresel ve Doğal Ürünler',badge:'',available:true},{id:1,name:'Serpme Kahvaltı',price:250,description:'Yöresel peynirler, zeytin, ev reçelleri, bal, tereyağı ve yumurta. 1 adet çay ikramımızdır.',category:'Kahvaltı',badge:'',available:true}];
  await page.route('https://qbwgpqkuqnmhsnepblmx.supabase.co/**',async route=>{
@@ -14,6 +15,14 @@ const root=path.resolve(__dirname,'../public');
   if(url.pathname.endsWith('/token'))result={access_token:'test',refresh_token:'test',expires_at:Date.now()/1000+3600};
   else if(url.pathname.endsWith('/is_menu_admin'))result=true;
   else if(url.pathname.endsWith('/reorder_products'))r.postDataJSON().product_ids.forEach((id,i)=>{products.find(p=>p.id===id).sort_order=i+1;});
+  else if(url.pathname.endsWith('/site_settings')){
+   if(r.method()==='PATCH'){
+    assert(r.headers().authorization,'Settings update must be authenticated');
+    assert.equal(r.headers().prefer,'return=representation');
+    location={...r.postDataJSON()};
+   }
+   result=[location];
+  }
   else if(url.pathname.endsWith('/categories')){
    if(r.method()==='POST')categories.push(r.postDataJSON().name);
    else if(r.method()==='PATCH'){
@@ -37,6 +46,17 @@ const root=path.resolve(__dirname,'../public');
  await page.getByLabel('E-posta adresi').fill('test@example.test');
  await page.getByLabel('Yönetici şifresi').fill('test-password');
  await page.getByRole('button',{name:'Giriş yap'}).click();
+ await page.getByLabel('İşletme adresi',{exact:true}).fill('Yeni Mahalle, Bahçe Sokak No: 12\nToroslar / Mersin');
+ await page.getByLabel('Harita / yol tarifi bağlantısı',{exact:true}).fill('https://maps.app.goo.gl/test-konum');
+ await page.getByRole('button',{name:'Adresi ve konumu kaydet',exact:true}).click();
+ await page.locator('#location-status').filter({hasText:'Adres ve harita bağlantısı kaydedildi.'}).waitFor();
+ assert.equal(location.map_url,'https://maps.app.goo.gl/test-konum');
+ await page.getByLabel('Harita / yol tarifi bağlantısı',{exact:true}).fill('javascript:alert(1)');
+ assert.equal(await page.locator('#location-preview').isVisible(),false);
+ await page.getByRole('button',{name:'Adresi ve konumu kaydet',exact:true}).click();
+ await page.locator('#location-status').filter({hasText:'Kaydedilemedi:'}).waitFor();
+ assert.equal(location.map_url,'https://maps.app.goo.gl/test-konum');
+ await page.getByLabel('Harita / yol tarifi bağlantısı',{exact:true}).fill(location.map_url);
  await page.getByLabel('Yeni menü sekmesinin adı').fill('Salatalar');
  await page.getByRole('button',{name:'Kategori ekle',exact:true}).click();
  await page.waitForFunction(()=>document.getElementById('category').value==='Salatalar');
@@ -48,6 +68,11 @@ const root=path.resolve(__dirname,'../public');
  await page.reload();
  await page.getByText('Salatalar / Mevsim Salata · 90 ₺',{exact:true}).waitFor();
  await page.goto('http://menu.test/');
+ await page.waitForFunction(()=>document.getElementById('business-address').textContent.includes('Bahçe Sokak'));
+ assert.equal(await page.locator('.sample-note').count(),0);
+ assert.equal(await page.locator('[data-map-link]').count(),2);
+ for(const link of await page.locator('[data-map-link]').all())assert.equal(await link.getAttribute('href'),location.map_url);
+ console.log('PASS: adres/konum kaydetme, zararlı URL reddi, iki yol tarifi bağlantısı ve örnek etiketinin kaldırılması (Supabase taklidi).');
  await page.getByRole('button',{name:'Salatalar',exact:true}).click();
  await page.getByRole('heading',{name:'Mevsim Salata',exact:true}).waitFor();
  await page.getByRole('button',{name:'Yöresel ve Doğal Ürünler',exact:true}).click();

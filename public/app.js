@@ -10,3 +10,17 @@ function render(){
 }
 async function load(){try{const data=await MenuBackend.api('menu');products=data.products;if(!data.categories.includes(category))category=data.categories[0]||'';const nav=document.querySelector('#categories');nav.replaceChildren();data.categories.forEach(c=>{const b=el('button','tab',c);b.onclick=()=>{category=c;render();};nav.append(b);});render();}catch{const p=document.querySelector('#products');p.replaceChildren(el('p','','Menü yüklenemedi.'));const retry=el('button','outline','Tekrar dene');retry.onclick=load;p.append(retry);}}
 load();document.addEventListener('visibilitychange',()=>{if(!document.hidden)load();});
+
+async function loadLocation(){
+ try{
+  const settings=await MenuBackend.api('settings');
+  const url=new URL(settings.map_url);
+  if(url.protocol!=='https:'||url.username||url.password)throw Error('Geçersiz harita bağlantısı');
+  document.getElementById('business-address').textContent=settings.address;
+  document.querySelectorAll('[data-map-link]').forEach(link=>link.href=url.href);
+ }catch{
+  // Keep the existing address and working directions if settings are not installed or unreachable.
+ }
+}
+loadLocation();
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)loadLocation();});
