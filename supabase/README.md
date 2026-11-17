@@ -28,3 +28,7 @@ Sonuçta bir satır dönmeli. Satır dönmediyse e-postayı ve kullanıcının o
 Yeni kategori yazma yetkisi yalnızca `menu_admins` listesindeki hesaplara aittir. Tüm ziyaretçiler kategori adlarını okuyabilir; gizli ürünleri okuma ve ürün yazma kuralları değişmez. Yönetici ekranındaki “Menü / kategori ekle” formuyla sekme oluşturun, ardından ürün formunda kategoriyi seçip ürünü kaydedin. Kategori oluşturma işlemi ürünlerden bağımsızdır; boş sekmeler de müşteri menüsünde görünür.
 
 Tarayıcı akış testi: `node tests/menu-ui.cjs` (Playwright ve `/usr/bin/chromium` gerekir). Test Supabase yanıtlarını taklit eder; canlı RLS testi değildir. Canlıda SQL uygulandıktan sonra normal yöneticiyle kategori ekleme/ürün ekleme ve gizli pencerede müşteri görünümü doğrulanmalıdır.
+
+## Yöresel ve doğal ürünler
+
+Kategori güncellemesi daha önce uygulandıysa yalnızca `natural-products.sql` dosyasını SQL Editor'da çalıştırın. Henüz uygulanmadıysa güncel `menu-update.sql` bu eklemeleri de içerir. İki dosya aynı isim ve kategorideki mevcut ürünleri çoğaltmaz; mevcut ürün fiyatlarını değiştirmez. Yeni kategori sırası 60'tır; İçecekler (50) sonrasında ve yöneticinin eklediği varsayılan sıralı kategorilerden (100) önce gelir. Fiyatlar örnektir, yönetici panelinden değiştirilebilir.

@@ -7,8 +7,8 @@ const root=path.resolve(__dirname,'../public');
  const browser=await chromium.launch({executablePath:'/usr/bin/chromium',headless:true,args:['--no-sandbox']});
  try{
  const page=await browser.newPage({viewport:{width:390,height:844}});
- const categories=['Kahvaltı','Sıkma & Börek','Yemekler','Tatlılar','İçecekler'];
- const products=[{id:1,name:'Serpme Kahvaltı',price:250,description:'1 adet çay ikramımızdır.',category:'Kahvaltı',badge:'',available:true}];
+ const categories=['Kahvaltı','Sıkma & Börek','Yemekler','Tatlılar','İçecekler','Yöresel ve Doğal Ürünler'];
+ const products=[{id:90,name:'Köy Yumurtası (30 adet)',price:250,description:'30 adetlik koli.',category:'Yöresel ve Doğal Ürünler',badge:'',available:true},{id:1,name:'Serpme Kahvaltı',price:250,description:'1 adet çay ikramımızdır.',category:'Kahvaltı',badge:'',available:true}];
  await page.route('https://qbwgpqkuqnmhsnepblmx.supabase.co/**',async route=>{
   const r=route.request(),url=new URL(r.url());let result=null;
   if(url.pathname.endsWith('/token'))result={access_token:'test',refresh_token:'test',expires_at:Date.now()/1000+3600};
@@ -17,7 +17,7 @@ const root=path.resolve(__dirname,'../public');
    if(r.method()==='POST')categories.push(r.postDataJSON().name);
    else result=categories.map(name=>({name}));
   }else if(url.pathname.endsWith('/products')){
-   if(r.method()==='POST')products.push({id:products.length+1,...r.postDataJSON()});
+   if(r.method()==='POST')products.push({id:products.length+100,...r.postDataJSON()});
    else result=products;
   }
   await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(result),headers:{'Access-Control-Allow-Origin':'*'}});
@@ -44,6 +44,8 @@ const root=path.resolve(__dirname,'../public');
  await page.goto('http://menu.test/');
  await page.getByRole('button',{name:'Salatalar',exact:true}).click();
  await page.getByRole('heading',{name:'Mevsim Salata',exact:true}).waitFor();
+ await page.getByRole('button',{name:'Yöresel ve Doğal Ürünler',exact:true}).click();
+ await page.getByRole('heading',{name:'Köy Yumurtası (30 adet)',exact:true}).waitFor();
  await page.getByRole('button',{name:'Tatlılar',exact:true}).click();
  await page.getByText('Bu kategori için şu anda ürün bulunmuyor.').waitFor();
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
