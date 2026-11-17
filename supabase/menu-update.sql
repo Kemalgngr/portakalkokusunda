@@ -29,7 +29,7 @@ alter table public.products add constraint products_category_fkey foreign key(ca
 update public.products set price=250,
  description='Yöresel peynirler, zeytin, ev reçelleri, bal, tereyağı ve yumurta. 1 adet çay ikramımızdır.'
  where name='Serpme Kahvaltı';
-update public.products set description='Odun ateşinde sobada demlenmiş çay.' where name='Demleme Çay';
+update public.products set price=20, description='Odun ateşinde sobada demlenmiş çay.' where name='Demleme Çay';
 
 insert into public.products(name,description,price,category,badge)
 select v.* from (values

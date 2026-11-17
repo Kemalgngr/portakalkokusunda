@@ -8,7 +8,7 @@ const root=path.resolve(__dirname,'../public');
  try{
  const page=await browser.newPage({viewport:{width:390,height:844}});
  const categories=['Kahvaltı','Sıkma & Börek','Yemekler','Tatlılar','İçecekler','Yöresel ve Doğal Ürünler'];
- const products=[{id:90,name:'Köy Yumurtası (30 adet)',price:250,description:'30 adetlik koli.',category:'Yöresel ve Doğal Ürünler',badge:'',available:true},{id:1,name:'Serpme Kahvaltı',price:250,description:'1 adet çay ikramımızdır.',category:'Kahvaltı',badge:'',available:true}];
+ const products=[{id:90,name:'Köy Yumurtası (30 adet)',price:250,description:'30 adetlik koli.',category:'Yöresel ve Doğal Ürünler',badge:'',available:true},{id:1,name:'Serpme Kahvaltı',price:250,description:'Yöresel peynirler, zeytin, ev reçelleri, bal, tereyağı ve yumurta. 1 adet çay ikramımızdır.',category:'Kahvaltı',badge:'',available:true}];
  await page.route('https://qbwgpqkuqnmhsnepblmx.supabase.co/**',async route=>{
   const r=route.request(),url=new URL(r.url());let result=null;
   if(url.pathname.endsWith('/token'))result={access_token:'test',refresh_token:'test',expires_at:Date.now()/1000+3600};
@@ -49,6 +49,23 @@ const root=path.resolve(__dirname,'../public');
  await page.getByRole('button',{name:'Tatlılar',exact:true}).click();
  await page.getByText('Bu kategori için şu anda ürün bulunmuyor.').waitFor();
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+ for(const width of [320,390,430]){
+  await page.setViewportSize({width,height:844});
+  await page.getByRole('button',{name:'Kahvaltı',exact:true}).click();
+  const metrics=await page.evaluate(()=>{
+   const nav=document.querySelector('.tabs'),card=document.querySelector('.product');
+   const rect=nav.getBoundingClientRect();
+   return {pageOverflow:document.documentElement.scrollWidth>innerWidth,
+    tabsOverflow:nav.scrollWidth>nav.clientWidth,
+    allTabsVisible:[...nav.children].every(b=>{const r=b.getBoundingClientRect();return r.left>=rect.left-1&&r.right<=rect.right+1&&r.top>=rect.top&&r.bottom<=rect.bottom+1;}),
+    height:card.getBoundingClientRect().height,clipped:card.scrollHeight>card.clientHeight};
+  });
+  assert.equal(metrics.pageOverflow,false);assert.equal(metrics.tabsOverflow,false);
+  assert.equal(metrics.allTabsVisible,true);assert.equal(metrics.clipped,false);
+  assert(metrics.height<=100,`Kart çok yüksek: ${width}px / ${metrics.height}px`);
+  console.log(`Mobil ${width}px: kart ${metrics.height}px; tüm kategoriler kaydırmadan erişilebilir.`);
+ }
+ await page.screenshot({path:'/tmp/portakal-compact-menu.png',fullPage:true});
  console.log('PASS: yönetici kategori ekleme, yeni kategoriye ürün kaydetme, yenileme sonrası görünürlük, müşteri sekmeleri, boş Tatlılar, mobil taşma kontrolü (Supabase taklidi).');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exit(1)});

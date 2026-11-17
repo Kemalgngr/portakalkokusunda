@@ -47,7 +47,7 @@ select v.* from (values
  ('Patatesli Gözleme','Sac üzerinde pişen, el açması ve bol içli.',140,'Sıkma & Gözleme',''),
  ('Ev Böreği','Çıtır çıtır, fırından yeni çıkmış peynirli börek.',120,'Sıkma & Gözleme',''),
  ('Kuru Fasulye & Pilav','Yanında turşu ve ayran ile ev yapımı öğle sofrası.',250,'Günün Menüsü','GÜNÜN FIX MENÜSÜ'),
- ('Demleme Çay','İnce belli bardakta, taze demlenmiş.',30,'İçecekler',''),
+ ('Demleme Çay','Odun ateşinde sobada demlenmiş çay.',20,'İçecekler',''),
  ('Türk Kahvesi','Sohbetin en güzel eşlikçisi.',80,'İçecekler',''),
  ('Taze Portakal Suyu','Portakalın en ferah hali. Mevsiminde.',100,'İçecekler','')
 ) as v(name,description,price,category,badge)
