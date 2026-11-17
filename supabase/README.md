@@ -48,3 +48,7 @@ Kategori kurulumu sonrasında `category-management.sql` dosyasını bir kez SQL 
 ## Menü sekmelerinin sıralaması
 
 `menu-order.sql` dosyasını SQL Editor'da bir kez çalıştırın. Yönetici ekranındaki Menü sıralaması alanında numara/oklarla sekmeleri sıralayıp Menü sıralamasını kaydet düğmesine basın. `reorder_categories` yalnızca yöneticiler için ve eksiksiz/tekrarsız menü isim listesiyle çalışır; isimler ve ürünler değiştirilmeden `categories.sort_order` tek transaction içinde güncellenir. Başka bir yönetici menü listesini değiştirdiyse yeniden yükleme gerekir. Müşteri sekmeleri ve yönetici kategori seçim alanları kaydedilen sıralamayı kullanır. Adres ve yol tarifi bölümü yönetim ekranının en altındadır.
+
+## Salatalar, ayran ve pişirme hizmeti
+
+`salads-and-services.sql` dosyasını SQL Editor'da çalıştırın. Salatalar ve Ek Hizmetler mevcut sekmelerin sonuna eklenir; aynı ad/kategorideki mevcut ürünler çoğaltılmaz ve fiyatları değiştirilmez. Salatalar ve ayran fiyatları örnektir. Pişirme ürünü 1 kg için 100 TL'dir; getirilen et/tavuk/köfte ve ayrıca satılan salata/içecekler bedelin dışındadır. Müşteri Ek Hizmetler sekmesinde Salatalar ve İçecekler'e geçiş düğmeleri görür. Bu yönlendirmeler ilgili kategori isimleri mevcutsa gösterilir. Fiyat, açıklama, görünürlük ve sıralama yönetici ekranından değiştirilebilir.

@@ -8,8 +8,12 @@ const root=path.resolve(__dirname,'../public');
  try{
  const page=await browser.newPage({viewport:{width:390,height:844}});
  let location={address:'Doruklu Mah, Toroslar Cd. No: 489\n33220 Toroslar / Mersin',map_url:'https://www.google.com/maps/search/?api=1&query=Doruklu'};
- const categories=['Kahvaltı','Sıkma & Börek','Yemekler','Tatlılar','İçecekler','Yöresel ve Doğal Ürünler'];
- const products=[{id:2,name:'Menemen',price:180,description:'Tavada.',category:'Kahvaltı',badge:'',available:true,sort_order:2},{id:90,name:'Köy Yumurtası (30 adet)',price:250,description:'30 adetlik koli.',category:'Yöresel ve Doğal Ürünler',badge:'',available:true},{id:1,name:'Serpme Kahvaltı',price:250,description:'Yöresel peynirler, zeytin, ev reçelleri, bal, tereyağı ve yumurta. 1 adet çay ikramımızdır.',category:'Kahvaltı',badge:'',available:true}];
+ const categories=['Kahvaltı','Sıkma & Börek','Yemekler','Tatlılar','İçecekler','Yöresel ve Doğal Ürünler','Ek Hizmetler'];
+ const products=[
+ {id:500,name:'Et / Tavuk / Köfte Pişirme (1 kg)',price:100,description:'Pişirme bedeli kilogram başına 100 TL’dir. Salata ve içecekler ayrıca ücretlendirilir.',category:'Ek Hizmetler',badge:'PİŞİRME BEDELİ · 1 KG',available:true},
+ {id:501,name:'Ayran (Bardak)',price:25,description:'Bir bardak.',category:'İçecekler',badge:'',available:true},
+ {id:502,name:'Ayran (Litre)',price:90,description:'1 litre.',category:'İçecekler',badge:'',available:true},
+ {id:503,name:'Tablacı Salatası',price:90,description:'Domates ve soğan.',category:'Salatalar',badge:'',available:true},{id:2,name:'Menemen',price:180,description:'Tavada.',category:'Kahvaltı',badge:'',available:true,sort_order:2},{id:90,name:'Köy Yumurtası (30 adet)',price:250,description:'30 adetlik koli.',category:'Yöresel ve Doğal Ürünler',badge:'',available:true},{id:1,name:'Serpme Kahvaltı',price:250,description:'Yöresel peynirler, zeytin, ev reçelleri, bal, tereyağı ve yumurta. 1 adet çay ikramımızdır.',category:'Kahvaltı',badge:'',available:true}];
  await page.route('https://qbwgpqkuqnmhsnepblmx.supabase.co/**',async route=>{
   const r=route.request(),url=new URL(r.url());let result=null;
   if(url.pathname.endsWith('/token'))result={access_token:'test',refresh_token:'test',expires_at:Date.now()/1000+3600};
@@ -79,6 +83,16 @@ const root=path.resolve(__dirname,'../public');
  await page.getByRole('heading',{name:'Mevsim Salata',exact:true}).waitFor();
  await page.getByRole('button',{name:'Yöresel ve Doğal Ürünler',exact:true}).click();
  await page.getByRole('heading',{name:'Köy Yumurtası (30 adet)',exact:true}).waitFor();
+ await page.getByRole('button',{name:'Ek Hizmetler',exact:true}).click();
+ await page.getByRole('heading',{name:'Et / Tavuk / Köfte Pişirme (1 kg)',exact:true}).waitFor();
+ assert((await page.locator('.product .price').textContent()).includes('100'));
+ await page.getByRole('button',{name:'Salatalar →',exact:true}).click();
+ await page.getByRole('heading',{name:'Tablacı Salatası',exact:true}).waitFor();
+ await page.getByRole('button',{name:'Ek Hizmetler',exact:true}).click();
+ await page.getByRole('button',{name:'İçecekler →',exact:true}).click();
+ await page.getByRole('heading',{name:'Ayran (Bardak)',exact:true}).waitFor();
+ await page.getByRole('heading',{name:'Ayran (Litre)',exact:true}).waitFor();
+ console.log('PASS: 100 TL/kg pişirme kartı, ek ücret açıklaması ve salata/içecek geçişleri.');
  await page.getByRole('button',{name:'Tatlılar',exact:true}).click();
  await page.getByText('Bu kategori için şu anda ürün bulunmuyor.').waitFor();
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
